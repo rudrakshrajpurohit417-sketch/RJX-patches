@@ -1,6 +1,6 @@
 # Framework migration map: Morphe/ReVanced-style patches → Reseam
 
-This is a conceptual mapping, not an API replacement table. Use each row to identify the behavior that must be reconstructed, then verify the exact Reseam DSL against the pinned Reseam version.
+This is a conceptual mapping, not an API replacement table or an exhaustive whitelist. Port legitimate behavior across app categories and patch types; verify the exact Reseam DSL against the project's pinned version, and combine high-level targets, lower-level bytecode operations, extensions, resources, and manifest edits as required.
 
 | Morphe/ReVanced-side concept | Reseam-side approach | Important caveat |
 |---|---|---|
@@ -26,7 +26,7 @@ This is a conceptual mapping, not an API replacement table. Use each row to iden
 1. Record the original patch's target, trigger, edits, conditions, dependencies, and side effects.
 2. Find the same method/field/resource in the exact target app version. Use semantic features rather than names alone where obfuscation applies.
 3. Translate each edit separately. Explain any dropped or changed behavior instead of silently approximating it.
-4. Ensure the target resolves uniquely, and fail with a clear message if not.
+4. Validate the intended target set: require a unique match when the original patch targets one item, and support the full verified set when it intentionally targets multiple items. Report missing or ambiguous matches clearly; do not arbitrarily limit a port to one target.
 5. Build and validate. If the current DSL differs from any example here, the installed project's Reseam reference/template wins.
 
 ## Minimal Reseam shape
