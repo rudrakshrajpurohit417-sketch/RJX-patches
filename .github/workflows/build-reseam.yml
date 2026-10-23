@@ -43,22 +43,18 @@ jobs:
           sed -i 's/rootProject.name = "example-patches"/rootProject.name = "rjx-patches"/' "$RUNNER_TEMP/reseam-template/settings.gradle.kts"
 
       - name: Install matching Reseam CLI
-        working-directory: ${{ runner.temp }}/reseam-template
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/engine"
-          version=$(grep 'id("app.reseam.workspace") version ' settings.gradle.kts | cut -d'"' -f4)
-          test -n "$version"
-          reseam_bin="$GITHUB_WORKSPACE/engine/reseam"
-          curl -fsSL -o "$reseam_bin" "https://cdn.reseam.app/engine/v${version}/reseam-linux-x64"
-          chmod +x "$reseam_bin"
-          echo "RESEAM_BIN=$reseam_bin" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/reseam-cli"
+          curl -fsSL -o "$RUNNER_TEMP/reseam-cli/reseam" "https://cdn.reseam.app/engine/v0.28.0/reseam-linux-x64"
+          chmod +x "$RUNNER_TEMP/reseam-cli/reseam"
+          echo "$RUNNER_TEMP/reseam-cli" >> "$GITHUB_PATH"
 
       - name: Build bundle
         working-directory: ${{ runner.temp }}/reseam-template
         run: ./gradlew --no-daemon bundle
 
       - name: Validate generated bundle
-        run: "$RESEAM_BIN" bundle list "$RUNNER_TEMP/reseam-template/build/reseam/rjx-patches.reseam"
+        run: reseam bundle list "$RUNNER_TEMP/reseam-template/build/reseam/rjx-patches.reseam"
 
       - name: Upload Reseam bundle
         uses: actions/upload-artifact@v4
