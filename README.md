@@ -27,7 +27,7 @@ The GitHub Actions workflow at [Validate Agent Skills](.github/workflows/validat
 
 ## Scope
 
-This repository is focused on the Morphe-to-Reseam porting skill. No AdGuard debugging patch or AdGuard-specific bundle workflow is included.
+This repository is focused on the Morphe-to-Reseam porting skill and its supporting reference material.
 
 The skill supports legitimate feature ports and compatibility fixes; it does not implement paid-license/subscription bypasses, payment evasion, DRM defeat, credential theft, or signature/trust bypasses.
 
