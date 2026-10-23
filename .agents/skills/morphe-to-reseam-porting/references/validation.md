@@ -15,7 +15,7 @@ Use this checklist for every patch. Mark a test as passed only after seeing its 
 - [ ] Public top-level Kotlin patch `val` using the Reseam DSL.
 - [ ] Correct `apps/<app>/patch/` location and package path.
 - [ ] App compatibility metadata is evidence-based.
-- [ ] All method/class/field targets have enough constraints to resolve uniquely.
+- [ ] Match constraints identify the intended target set: a single match when one target is intended, or the complete verified set when the patch intentionally spans multiple targets.
 - [ ] No copied Morphe fingerprint indexes, raw offsets, registers, or helper APIs assumed compatible.
 - [ ] Branching is built with Reseam runtime branch builders, not Kotlin `if` that only runs during patch construction.
 - [ ] Receiver, parameter, return, field, static/instance and access semantics are correct.
@@ -44,4 +44,4 @@ Use explicit statuses:
 - `Runtime tested`: yes/no, tested environment.
 - `Known limitations`: exact unresolved errors/assumptions.
 
-A clean build is not proof of runtime correctness. A target-resolution dry run is not proof that the changed feature behaves correctly.
+A clean build is not proof of runtime correctness. A target-resolution dry run is not proof that the changed feature behaves correctly. The checklist is not a whitelist of supported apps or patch categories; adapt it to the actual port while retaining the required safety boundary and evidence-based validation.
