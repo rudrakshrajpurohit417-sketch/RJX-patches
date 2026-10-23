@@ -14,8 +14,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      RESEAM_BIN: ${{ github.workspace }}/engine/reseam
     steps:
       - name: Check out RJX patch sources
         uses: actions/checkout@v6
@@ -46,6 +44,8 @@ jobs:
 
       - name: Install matching Reseam CLI
         working-directory: ${{ runner.temp }}/reseam-template
+        env:
+          RESEAM_BIN: ${{ github.workspace }}/engine/reseam
         run: |
           mkdir -p "$GITHUB_WORKSPACE/engine"
           version=$(sed -n 's/.*id("app.reseam.workspace") version "\([^"]*\)".*/\1/p' settings.gradle.kts)
@@ -55,9 +55,13 @@ jobs:
 
       - name: Build bundle
         working-directory: ${{ runner.temp }}/reseam-template
+        env:
+          RESEAM_BIN: ${{ github.workspace }}/engine/reseam
         run: ./gradlew --no-daemon bundle
 
       - name: Validate generated bundle
+        env:
+          RESEAM_BIN: ${{ github.workspace }}/engine/reseam
         run: "$RESEAM_BIN" bundle list "$RUNNER_TEMP/reseam-template/build/reseam/rjx-patches.reseam"
 
       - name: Upload Reseam bundle
