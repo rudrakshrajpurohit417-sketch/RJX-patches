@@ -1,131 +1,118 @@
 ---
 name: morphe-to-reseam-porting
-description: Port Morphe/ReVanced-style Android app patches to Reseam Kotlin bundles. Use for Java/Kotlin patch sources, compiled .class or .jar files, APK/Dex/Smali analysis, fingerprints, bytecode edits, manifest/resource edits, and Reseam build failures.
-compatibility: Requires a checkout of the target patch repository. Building usually requires JDK 17, Android SDK, Gradle wrapper, and a Reseam CLI version matching the project's pinned plugin.
+description: Faithfully port identified original Morphe patches to Reseam, including compiled patch classes, fingerprints, dependencies, extensions, bytecode, resources, and manifest edits. Never substitute demo or placeholder patches for the original implementation.
+compatibility: Requires a checkout of the target patch repository and compatible JDK/Android SDK/Gradle/Reseam tooling for build validation.
 metadata:
   author: RJX Mods
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
-# Morphe → Reseam Porting Skill
+# Original Morphe → Reseam Porting Skill
 
-Convert the *behavior* of a Morphe patch into a maintainable Reseam patch. Do not mechanically rename imports or APIs. Inspect the actual implementation, discover the relevant target-app code, write idiomatic Reseam Kotlin, build it, and report exactly what was and was not tested.
+This skill exists to convert an **identified, original Morphe patch** into a functionally equivalent Reseam implementation. The deliverable is the real port of the requested patch—not a tutorial, a toy patch, a smoke test, a plausible-looking substitute, or a demonstration of Reseam syntax.
 
-## Broad technical scope
+## Mandatory source-fidelity contract
 
-- There is no fixed app whitelist or patch-category whitelist. Attempt any legitimate Morphe-to-Reseam port, including UI, playback, media, privacy, accessibility, ad handling, performance, networking, resources, manifest changes, general feature changes, and compatibility fixes. These examples are illustrative, not exhaustive.
-- Do not arbitrarily limit a port to one file, method, module, extension, package, or target version. Add helper code, runtime extensions, resources, or multiple patch declarations when the original behavior requires them.
-- Do not stop merely because source is incomplete or an input is compiled. Inspect available `.class`/`.jar`, APK, DEX/Smali, decompiler output, dependency archives, upstream history, and nearby implementations; reconstruct the best-supported behavior and explicitly record uncertainty.
-- If a crucial artifact is unavailable, first complete all useful analysis possible with the current inputs. Then identify the precise missing item and why it matters instead of imposing a broad refusal or asking generic questions.
-- Use examples and preferred approaches as starting points, not a hardcoded list of allowed implementation techniques. When higher-level Reseam APIs cannot express the required legitimate behavior, investigate documented lower-level APIs and extensions.
+1. **Identify the original patch first.** Use the artifact supplied by the user when one is supplied. If only a patch name or feature is given, locate the corresponding original patch in the official Morphe source repository and identify the exact source revision. Search the real patch tree, its metadata, fingerprints, helper classes, shared code, dependencies, extensions, and history. Do not guess the implementation from a display name or a feature description.
+2. **Never fabricate a replacement.** Do not create a sample patch, demo patch, placeholder patch, smoke-test patch, generic manifest edit, or made-up implementation as a stand-in for the requested original. Do not invent target methods, fingerprints, class names, signatures, resource IDs, option behavior, dependencies, or test results.
+3. **No fake completion.** A partially ported patch must be marked partial. A compile-only result is not a behaviorally complete port. Never say that a port is complete if original operations, dependencies, target cases, options, or runtime effects remain unimplemented or unverified.
+4. **Build a behavior-coverage ledger.** For every original patch class/declaration, list each target/fingerprint, matching constraint, transformation, condition/branch, injected call, option, dependency, extension, resource/manifest change, and version assumption. Map each item to its Reseam implementation and the corresponding source evidence. Account for every item as ported, intentionally unnecessary with evidence, or unresolved. Do not silently drop anything.
+5. **Preserve the original behavior, not the old framework syntax.** Morphe APIs and execution models may not exist in Reseam. Reconstruct the semantics in the Reseam model, including helper code, runtime extensions, resources and changes across multiple classes/methods where required. Do not merely rename imports, and do not force a multi-target original patch into a single-target rewrite.
+6. **Compiled input is real source evidence.** If the original implementation is in `.class` files, a JAR, or compiled Morphe artifacts, inspect class metadata, annotations, constant pools, descriptors, method bodies, call sites, and neighboring classes. Decompile as an aid and cross-check ambiguous control flow against bytecode. Search for the matching upstream source and dependencies, but do not replace a supplied binary with an unrelated upstream revision. When source and binary differ, record which artifact/version is the target and port that behavior.
+7. **Missing input does not authorize fabrication.** Perform all useful analysis with the available artifact, then identify the exact unresolved item and why it blocks faithful porting. Ask only for that specific item. Do not create a stand-in patch while waiting for it.
+8. **Use authoritative, version-matched information.** Inspect the target project's Reseam template, plugin version, CLI version, official docs, and local conventions before implementing. Confirm API names and call semantics from the docs/source for that version instead of guessing.
+9. **Keep changes focused on the actual port.** Edit the real patch files and any required related extensions/resources/build configuration. Do not leave unrelated demo patches or generic scaffolding in the deliverable. Preserve unrelated user changes.
+10. Respect source licenses and notices. Do not run untrusted decompiled code. Do not commit APKs, private keys, tokens, or credentials.
 
-## Non-negotiable rules
+## Scope
 
-- Work from the current repository and provided artifacts first. Inspect `README`, `settings.gradle.kts`, `manifest.toml`, module layout, existing patches, workflow files, and the pinned Reseam plugin/CLI before editing.
-- Use the newest authoritative docs compatible with the project's pinned version. Do not assume that a remembered API still exists.
-- Do not invent method signatures, package names, fingerprints, compatibility versions, dependencies, CLI flags, or build results. Verify them against source, decompiler output, docs, or a real build.
-- Port the patch's intended behavior—not its Morphe implementation mechanics. Rebuild the target selection and bytecode edits using Reseam primitives.
-- Make all changes required to preserve the original patch's intended behavior, including related modules, extensions, resources, and multiple target methods when needed. Avoid unrelated churn and follow the repo's naming and formatting style.
-- If source and binary disagree, trust neither blindly: inspect both, explain the mismatch, and use the version that matches the intended target app.
-- Respect upstream licenses and notices. Prefer a link to upstream source over copying large portions into this repository.
-- A required boundary applies regardless of app, framework, or implementation technique: do not implement patches whose purpose is to defeat paid-license/subscription checks, forge entitlements, evade payment, defeat DRM, steal credentials/tokens, or bypass security/signature verification. If a patch combines such behavior with separable legitimate changes, port the separable changes and explain precisely what was omitted.
+There is no fixed app whitelist or patch-category whitelist. Attempt the complete, legitimate original behavior across app categories and implementation layers. The technical approach can include Kotlin patch declarations, semantic method/class/field targets, instruction points, low-level bytecode, runtime extensions, shared code, resources, manifest edits, and file changes as required by the source. Preferred APIs are guidance, not a whitelist.
 
-## End-to-end workflow
+The required safety boundary remains: do not implement behavior intended to forge paid entitlements, bypass paid license/subscription checks or payment, defeat DRM, steal credentials/tokens, or bypass signature/trust verification. If a source combines such behavior with separable legitimate changes, explain the blocked portion and only port the separable behavior; do not claim a full port of the original.
 
-### 1. Inventory the repository and inputs
+## Required workflow
 
-1. Inspect the full relevant tree and existing branch state. Identify the app module, patch module, extension modules, manifest, pinned Reseam plugin version, CLI version, and current CI workflow.
-2. Identify each input type separately: source `.java`/`.kt`, compiled patch `.class`/`.jar`, target `.apk`/`.apkm`/split APKs, DEX/Smali, patch metadata, or a prior build log.
-3. Read the whole candidate patch and its direct dependencies before coding. Search for helper classes, shared extensions, fingerprints, options, settings, compatibility declarations, strings/resources, and other patches that must execute first.
-4. Determine the exact package name and target app version from reliable metadata when available. Do not guess a version from the newest version number found online.
+### 1. Identify and pin the source
 
-Read [class and bytecode inputs](references/class-and-bytecode-inputs.md) when the source is binary or decompiled.
+- Inspect the working repository, branch state, build layout, bundle manifest, Reseam plugin, CLI, and available test infrastructure.
+- Determine which original patch is requested from the exact supplied file/class/path/name. If it is not supplied, locate it in the official Morphe repository. Do not assume that a similarly named patch, a ReVanced predecessor, or a different release is identical.
+- Record the original source URL and immutable commit/release identifier where available. For uploaded binaries, record the exact filename and hash when the tooling permits; retain the original input unchanged.
+- Locate related original declarations, base classes, fingerprints, annotations, helpers, shared patch modules, injected extensions, resources, settings/options, dependencies and patch-order requirements.
+- Establish the target app package and version from the real APK/artifact or trustworthy metadata. If the exact APK is unavailable, continue source analysis, but label APK-specific target matches and runtime compatibility unverified.
 
-### 2. Recover behavior before translation
+### 2. Recover the complete original behavior
 
-Write a short behavior summary with:
-- trigger/target method or resource;
-- original preconditions and relevant control flow;
-- what the patch inserts, removes, replaces, or changes;
-- values/registers/parameters/return values it depends on;
-- dependencies, options, hooks, extensions, and app-version assumptions;
-- risks or unknowns that require validation.
+Inspect the full original patch implementation and its direct and transitive dependencies. Separate patch-time code from runtime code that gets injected into the Android app. For compiled inputs, follow the procedure in [class-and-bytecode-inputs.md](references/class-and-bytecode-inputs.md).
 
-Separate the patch definition (the code that runs during patching) from code that is injected into the target app at runtime. A class in the Morphe patch JAR may implement patch-time logic; an extension class may be code added to the patched app. Do not confuse either with the target app's own class.
+Create a behavior-coverage ledger before finalizing implementation. For each source operation, capture:
 
-### 3. Choose the Reseam mechanism
+- original patch declaration and metadata, target package/version and patch ID/name;
+- every fingerprint, selector, match constraint and matched target (including multiple targets);
+- instruction-level insertion/replacement/removal and control-flow semantics;
+- receiver, parameter, return, field, local/register, type and access semantics;
+- conditions, branches, null behavior, exceptions, side effects and ordering;
+- patch options, settings, user-visible descriptions/defaults and dependencies;
+- all helper classes, runtime extension code, resource/manifest/file edits and generated assets;
+- compatibility constraints and known version-specific changes.
 
-Prefer the simplest valid Reseam feature that matches the source behavior:
+When behavior depends on code in a superclass, helper, extension or dependency, inspect that code too. Do not infer complete behavior from a patch class name, description, annotation or fingerprint alone.
 
-- Manifest attributes, XML/resources, or files → Reseam manifest/resource/file editing APIs.
-- A behavior in a method → declare a semantic `method(...)` target and edit it via `before`, `after`, or `replace`.
-- A single instruction/call/string/literal → use a narrow point/instruction target, then edit that point.
-- Existing app class or field → use `klass(...)`, `fieldOfType(...)`, or documented class/field targets.
-- Logic too long or awkward for a bytecode block → put app-runtime Kotlin in an extension and expose only the methods needed by the patch, following current Reseam extension docs.
-- A transformation not expressible through a high-level API → investigate documented raw-bytecode APIs, extension code, or a combination of approaches. Inspect the exact bytecode and confirm API behavior against the project's Reseam version; do not exclude a technique merely because it is lower-level.
+### 3. Translate the actual patch into Reseam
 
-Do not copy Morphe instruction indexes or assume an old fingerprint maps one-to-one. Reseam searches the target APK independently; choose constraints that uniquely identify the intended code.
+- Use the real Reseam module structure and declarations discovered from the repository's template and docs. Reseam discovers public top-level patch values; ensure the original patch is represented by actual discoverable declarations.
+- Recreate all original targets from evidence in the target APK, using Reseam's supported target and point model. Rebuild fingerprint logic semantically; old fingerprints, obfuscated names, instruction positions, indexes, or register numbers are not automatically portable.
+- Translate each edit in execution order and preserve the meaning of every branch, return, call, field access, argument, exception path and side effect. Confirm static versus instance invocation and descriptors.
+- Implement the original options, metadata, compatibility, dependencies and ordering. Do not replace option-controlled behavior with a hard-coded value.
+- Port required runtime extensions, shared code, resources, manifest changes and assets. Preserve inter-module dependencies and patch-to-extension bindings.
+- When high-level targets cannot express the required behavior, inspect the current low-level Reseam API and use the appropriate bytecode or extension mechanism. Do not abandon functionality simply because the first API tried is insufficient.
+- Where the original intentionally handles multiple methods/classes/instructions, port and verify the full intended target set. A missing match must not silently turn a multi-target patch into a partial conversion.
+- If a source behavior cannot yet be represented, keep it explicitly unresolved in the coverage ledger. Do not replace it with a merely similar behavior and describe it as equivalent.
 
-### 4. Implement as a Reseam patch
+Use the [migration map](references/migration-map.md) as a conceptual index only. It is not a code template and is not exhaustive.
 
-1. Place source under `apps/<app>/patch/src/main/kotlin/<package path>/` using the repository's established layout.
-2. Declare a **public top-level** Kotlin `val` with `patch("Display name") { ... }`. Private properties or patches nested inside an object are not discovered as patch declarations.
-3. Set an accurate description, known app compatibility, options, and dependencies where needed. Never overstate compatibility.
-4. Identify the intended target set from the original patch. If it targets one method, make the match unique; if it intentionally targets several methods/classes/resources, support and verify that complete set rather than arbitrarily forcing a single match. Prefer stable strings, calls, types, class relationships, and behavior over obfuscated names or brittle offsets.
-5. Use documented Reseam bytecode builders for values and branches. Remember that Kotlin inside the patch DSL executes at patch time to *construct* instructions; use Reseam branch builders for runtime branches.
-6. Give each patch a stable Kotlin property/package path. Renaming them may change patch IDs used by users or dependencies.
-7. Fail clearly when a required target is missing. For optional or multi-target patches, report which targets matched, which were skipped, and why; do not silently drop intended behavior or force all patches into a single-target design.
+### 4. Validate against the real target
 
-Use [the migration map](references/migration-map.md) for framework-specific translation pitfalls.
+1. Build the bundle using the repository's actual pinned toolchain and correct bundle configuration.
+2. Inspect the build output and the generated bundle metadata. Confirm the actual original patch declarations, IDs, options, compatibility and dependencies are present.
+3. Run Reseam's bundle validation/listing command against the actual generated artifact using the current CLI's required trust flags.
+4. If the exact target APK (including required splits) is available, run the current CLI dry-run against it. Inspect the per-patch outcomes, target-resolution details and errors. Resolve failures rather than treating them as warnings to ignore.
+5. Apply to a disposable copy of the target APK only when appropriate, then test the modified behavior against the original behavior contract. Do not overwrite the sole original APK.
+6. Test relevant branches, option settings and target variants when practical. Record exactly which versions and cases were tested. Never claim runtime testing unless it actually occurred.
+7. Keep bundle signing separate from APK signing. Do not disable trust verification or commit private signing material to make a test pass.
 
-### 5. Build, validate, and test
+A compile or bundle-validation pass proves only that the bundle builds and its metadata can be read. A dry run proves only the validations it actually executes. Functional equivalence requires evidence for the original behavior and target version.
 
-Run the repo's existing checks first. Normally:
+### 5. Handle failures without faking success
 
-```bash
-./gradlew --no-daemon bundle
-reseam bundle list build/reseam/<bundle-name>.reseam
-```
+- **Original source not found:** search official source, history and available artifacts; if still missing, request the precise original patch file or class. Do not synthesize a generic replacement.
+- **Binary-only patch:** inspect bytecode and dependencies, use decompilation only as an aid, and list any uncertainty caused by unavailable symbols or runtime dependencies.
+- **No target match:** compare package/version and each original fingerprint clue against the actual APK; fix the port or report the exact unresolved target.
+- **Multiple matches:** reproduce the original intended target set, or narrow a single-target selector with evidence. Never pick the first match merely to force a pass.
+- **Compile/API failure:** read the pinned Reseam API/docs and repository sources; correct the implementation instead of inserting a dummy method or bypassing the check.
+- **Runtime failure:** inspect types, stack/register behavior, branches, exceptions, extension bindings, resources and side effects; fix the real port.
+- **Incomplete dependencies:** port the required legitimate dependencies or record the exact blocker. Do not remove dependencies and claim equivalence.
+- **Signing/trust failure:** diagnose the actual key/configuration problem. Never turn off trust verification.
+- **Target-version drift:** compare the source revision and app version, update the target evidence, and report each tested version separately.
 
-Use the actual generated path from the current template and manifest; do not assume the placeholder path above. If the repository has a CI workflow that builds the bundle, inspect the job result and logs too.
+### 6. Required deliverables
 
-Where an exact test APK and trusted bundle key are available, follow the current CLI docs for a dry run, then apply the bundle to a disposable copy of that APK. For example, current Reseam CLI docs show `reseam patch ... --dry-run`; verify the required `--bundle`, `--trust`, and output options for the installed CLI. Do not patch the user's only copy in place.
+Return only the actual files for the original port, its necessary dependencies, and relevant build/test configuration. Do not add a demo or placeholder patch to illustrate a conversion.
 
-After a successful build:
-- verify the bundle lists the intended patch and compatibility metadata;
-- run a dry-run against the exact target app build if one is available;
-- test actual behavior only when you can genuinely run the patched app or receive a test result;
-- inspect build output for skipped patches, duplicate target matches, register allocation failures, missing dependencies, or manifest/resource errors;
-- leave no signing private key in Git. Keep persistent release keys in a secure secret store; an ephemeral CI key is suitable only for smoke-test artifacts, not a stable published signing identity.
+For every port, include:
 
-Report results precisely using separate statuses: `compiled`, `bundle validated`, `dry-run tested`, and `runtime tested`. Do not call a patch "working" merely because the source compiles.
+- **Source identity:** original path/repository, source revision or supplied artifact identity.
+- **Target identity:** package, app version/build and APK or split set inspected.
+- **Coverage ledger:** every original behavior mapped to the actual Reseam code, or explicitly unresolved with a reason.
+- **Implementation:** files changed and how runtime extensions/resources/dependencies are connected.
+- **Verification:** separate factual results for source inspection, compilation, bundle validation, target dry-run, and runtime tests.
+- **Residual gaps:** any unported behavior, unmatched fingerprints, unknown dependencies, unsupported bytecode semantics or untested branches.
+- **Artifacts:** exact bundle location/link only if that bundle was actually produced.
 
-## Error-driven debugging
-
-- **Patch not discovered:** confirm the declaration is a public top-level `val`, package files are inside the configured module tree, and the app module was included by the workspace plugin.
-- **No method match:** inspect the rejection details; check app version, strings, parameter/return descriptors, calls, class constraints, and whether the APK's code actually contains the expected behavior.
-- **Too many matches:** add evidence-based constraints; do not solve ambiguity with `first()` unless matches are genuinely interchangeable.
-- **API/import/compile error:** compare the installed Reseam plugin version with the current official reference and local template examples; do not guess replacement imports.
-- **Patch runtime failure:** verify parameter/return types, static versus instance calls, access restrictions, branch paths, object/register types, and whether an extension method is exported/bound correctly.
-- **Register allocation error:** move nontrivial logic into an app extension rather than trying random register changes.
-- **Bundle signature or trust error:** distinguish bundle-signing keys from APK-signing keys. Never disable trust verification to make a test pass.
-- **Version-specific breakage:** narrow or update compatibility metadata and test a known target version. Do not claim support for every app version without evidence.
-
-## Deliverables for every port
-
-Return the actual edited source files and a concise report stating:
-1. original patch and intended behavior;
-2. Reseam implementation and files changed;
-3. target app/package/version assumptions;
-4. build/validation/runtime results, including errors still unresolved;
-5. exact artifact path or link if a `.reseam` bundle was actually produced;
-6. source/API references used.
-
-Do not stop after writing a plan or placeholder when enough evidence exists to implement the port. Proceed as far as possible using the available inputs, document assumptions, build and validate the implementation, and ask for a specific missing artifact only when it materially blocks the next step. Do not claim unsupported compatibility or testing.
+Use the word **complete** only when the coverage ledger has no unexplained omissions and the stated level of validation supports that claim. Otherwise label the port partial and say exactly what remains.
 
 ## Reference files
 
 - [Migration map](references/migration-map.md)
 - [Class/JAR/DEX inspection](references/class-and-bytecode-inputs.md)
 - [Port validation checklist](references/validation.md)
-- [Reseam official docs and Morphe source](references/upstream-docs.md)
+- [Official documentation and source repositories](references/upstream-docs.md)
