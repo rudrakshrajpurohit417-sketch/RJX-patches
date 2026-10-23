@@ -11,16 +11,24 @@ metadata:
 
 Convert the *behavior* of a Morphe patch into a maintainable Reseam patch. Do not mechanically rename imports or APIs. Inspect the actual implementation, discover the relevant target-app code, write idiomatic Reseam Kotlin, build it, and report exactly what was and was not tested.
 
+## Broad technical scope
+
+- There is no fixed app whitelist or patch-category whitelist. Attempt any legitimate Morphe-to-Reseam port, including UI, playback, media, privacy, accessibility, ad handling, performance, networking, resources, manifest changes, general feature changes, and compatibility fixes. These examples are illustrative, not exhaustive.
+- Do not arbitrarily limit a port to one file, method, module, extension, package, or target version. Add helper code, runtime extensions, resources, or multiple patch declarations when the original behavior requires them.
+- Do not stop merely because source is incomplete or an input is compiled. Inspect available `.class`/`.jar`, APK, DEX/Smali, decompiler output, dependency archives, upstream history, and nearby implementations; reconstruct the best-supported behavior and explicitly record uncertainty.
+- If a crucial artifact is unavailable, first complete all useful analysis possible with the current inputs. Then identify the precise missing item and why it matters instead of imposing a broad refusal or asking generic questions.
+- Use examples and preferred approaches as starting points, not a hardcoded list of allowed implementation techniques. When higher-level Reseam APIs cannot express the required legitimate behavior, investigate documented lower-level APIs and extensions.
+
 ## Non-negotiable rules
 
 - Work from the current repository and provided artifacts first. Inspect `README`, `settings.gradle.kts`, `manifest.toml`, module layout, existing patches, workflow files, and the pinned Reseam plugin/CLI before editing.
 - Use the newest authoritative docs compatible with the project's pinned version. Do not assume that a remembered API still exists.
 - Do not invent method signatures, package names, fingerprints, compatibility versions, dependencies, CLI flags, or build results. Verify them against source, decompiler output, docs, or a real build.
 - Port the patch's intended behavior—not its Morphe implementation mechanics. Rebuild the target selection and bytecode edits using Reseam primitives.
-- Keep changes small and specific. Preserve unrelated files. Follow the repo's existing naming and formatting style.
+- Make all changes required to preserve the original patch's intended behavior, including related modules, extensions, resources, and multiple target methods when needed. Avoid unrelated churn and follow the repo's naming and formatting style.
 - If source and binary disagree, trust neither blindly: inspect both, explain the mismatch, and use the version that matches the intended target app.
 - Respect upstream licenses and notices. Prefer a link to upstream source over copying large portions into this repository.
-- Do not port patches designed to defeat paid-license or subscription checks, forge entitlements, evade payment, defeat DRM, steal credentials/tokens, or bypass security/signature verification. Explain the blocked behavior briefly and offer a benign portion of the patch if separable.
+- A required boundary applies regardless of app, framework, or implementation technique: do not implement patches whose purpose is to defeat paid-license/subscription checks, forge entitlements, evade payment, defeat DRM, steal credentials/tokens, or bypass security/signature verification. If a patch combines such behavior with separable legitimate changes, port the separable changes and explain precisely what was omitted.
 
 ## End-to-end workflow
 
@@ -54,7 +62,7 @@ Prefer the simplest valid Reseam feature that matches the source behavior:
 - A single instruction/call/string/literal → use a narrow point/instruction target, then edit that point.
 - Existing app class or field → use `klass(...)`, `fieldOfType(...)`, or documented class/field targets.
 - Logic too long or awkward for a bytecode block → put app-runtime Kotlin in an extension and expose only the methods needed by the patch, following current Reseam extension docs.
-- A low-level transformation not expressible at a higher level → use documented raw-bytecode APIs only after reading the current reference and inspecting the exact bytecode.
+- A transformation not expressible through a high-level API → investigate documented raw-bytecode APIs, extension code, or a combination of approaches. Inspect the exact bytecode and confirm API behavior against the project's Reseam version; do not exclude a technique merely because it is lower-level.
 
 Do not copy Morphe instruction indexes or assume an old fingerprint maps one-to-one. Reseam searches the target APK independently; choose constraints that uniquely identify the intended code.
 
@@ -63,10 +71,10 @@ Do not copy Morphe instruction indexes or assume an old fingerprint maps one-to-
 1. Place source under `apps/<app>/patch/src/main/kotlin/<package path>/` using the repository's established layout.
 2. Declare a **public top-level** Kotlin `val` with `patch("Display name") { ... }`. Private properties or patches nested inside an object are not discovered as patch declarations.
 3. Set an accurate description, known app compatibility, options, and dependencies where needed. Never overstate compatibility.
-4. Keep matching constraints specific enough to find exactly one intended method. Prefer stable strings, calls, types, class relationships, and behavior over obfuscated method names or brittle instruction offsets.
+4. Identify the intended target set from the original patch. If it targets one method, make the match unique; if it intentionally targets several methods/classes/resources, support and verify that complete set rather than arbitrarily forcing a single match. Prefer stable strings, calls, types, class relationships, and behavior over obfuscated names or brittle offsets.
 5. Use documented Reseam bytecode builders for values and branches. Remember that Kotlin inside the patch DSL executes at patch time to *construct* instructions; use Reseam branch builders for runtime branches.
 6. Give each patch a stable Kotlin property/package path. Renaming them may change patch IDs used by users or dependencies.
-7. Use explicit errors for missing required targets/resources so a wrong app version fails visibly instead of silently making a partial patch.
+7. Fail clearly when a required target is missing. For optional or multi-target patches, report which targets matched, which were skipped, and why; do not silently drop intended behavior or force all patches into a single-target design.
 
 Use [the migration map](references/migration-map.md) for framework-specific translation pitfalls.
 
@@ -113,7 +121,7 @@ Return the actual edited source files and a concise report stating:
 5. exact artifact path or link if a `.reseam` bundle was actually produced;
 6. source/API references used.
 
-Do not stop after writing a plan or a placeholder patch when enough input exists to implement the change. If a required artifact or app version is genuinely missing, do the useful analysis/build work first, then ask only for that specific missing input.
+Do not stop after writing a plan or placeholder when enough evidence exists to implement the port. Proceed as far as possible using the available inputs, document assumptions, build and validate the implementation, and ask for a specific missing artifact only when it materially blocks the next step. Do not claim unsupported compatibility or testing.
 
 ## Reference files
 
