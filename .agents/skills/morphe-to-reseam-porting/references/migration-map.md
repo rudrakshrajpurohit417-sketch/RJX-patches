@@ -1,52 +1,56 @@
-# Framework migration map: Morphe/ReVanced-style patches → Reseam
+# Porting semantics from Morphe to Reseam
 
-This is a conceptual mapping, not an API replacement table or an exhaustive whitelist. Port legitimate behavior across app categories and patch types; verify the exact Reseam DSL against the project's pinned version, and combine high-level targets, lower-level bytecode operations, extensions, resources, and manifest edits as required.
+This reference maps framework concepts, not source code. It contains **no sample patch implementation**. Never copy a row, invented method, hypothetical fingerprint or generic manifest edit into the target repository as a substitute for the original patch.
 
-| Morphe/ReVanced-side concept | Reseam-side approach | Important caveat |
+## Translate the real source operation
+
+| Original Morphe-side material | Required Reseam-side work | Evidence required |
 |---|---|---|
-| `@Patch`, `@Name`, `@Description`, metadata on a patch class | Public top-level Kotlin `val x = patch("Name") { description(...); ...; execute { ... } }` | A private or nested patch value is not discovered. |
-| App/package/version compatibility metadata | `compatibleWith(...)` in the patch declaration | Only declare versions supported by evidence/tests. |
-| Patch dependencies/patch ordering | Reseam `dependsOn(otherPatch)` | Dependencies must exist in the bundle or be declared from another bundle per docs. |
-| Options/preferences in the old patch manager | Reseam patch options or in-app settings, as appropriate | Recreate user-facing semantics; don't map names alone. |
-| `MethodFingerprint`, `Fingerprint`, opcode/string scans | Reseam semantic targets such as `method("label") { strings(...); returns(...); params(...); calls(...) }` | A fingerprint is evidence, not a transferable identity. Match a unique method in the actual target APK. |
-| `BytecodePatch` or patch-class `execute(context)` | Reseam `execute { ... }` block | Old context/helper APIs do not exist just because the names look similar. |
-| Insert at method entry | Reseam method target `.before { ... }` | Use only after proving the target method and expected receiver/parameters. |
-| Insert before each return / after method behavior | Reseam `.after { ... }` or a narrow instruction point, depending on desired semantics | Reseam method `after` executes before returns; branches can affect point-level hooks differently. |
-| Replace entire target method | Reseam `.replace { ... }` | Must preserve correct return type, side effects, and all necessary paths. |
-| Insert/replace at a specific instruction | Reseam point target plus `.before { ... }` / `.after { ... }`; inspect current point docs | A text match may occur more than once; make the point unambiguous. |
-| Smali strings/opcodes/register manipulation in the source patch | Prefer Reseam's higher-level target/value DSL; use raw-bytecode APIs only if necessary | Do not transplant register indexes from a different DEX build. |
-| Runtime helper/extension classes | Reseam app `extensions/<name>/` Kotlin code with documented exports/bindings | Patch-time code and injected app-runtime code execute in different environments. |
-| Manifest patch | Reseam manifest editing inside `execute` | Check namespace, existing attributes, and missing-node behavior on the actual app manifest. |
-| Resource/XML/file patch | Reseam resource/file APIs from current docs | Confirm resource names/IDs after resource shrinking or obfuscation. |
-| Patch IDs and references | Reseam IDs derive from Kotlin package + top-level property; bundle name comes from `manifest.toml` | Renaming the property/package may break downstream references. |
-| Old tool's patch bundle/install/signing workflow | Reseam signed `.reseam` bundle and current Reseam CLI/Manager workflow | Bundle signature/trust and APK signing are separate concerns. |
+| Patch declaration, annotations and metadata | Recreate an actual discoverable Reseam top-level patch declaration with the matching user-facing intent and supported metadata | The original declaration, compiled annotation/constants, exact patch ID/name and current Reseam docs |
+| Target application, package name and compatibility range | Declare compatibility for the actual package and verified target versions | Original patch metadata and target APK/version metadata |
+| Fingerprints and matchers | Rebuild the predicate from actual strings, calls, descriptors, class/field relations and instruction context | Every original fingerprint matcher plus inspection of the target APK |
+| Multiple fingerprints, target methods or classes | Preserve the entire intended target set and each target's distinct edit | All original target declarations and results from resolution against the target APK |
+| Bytecode patch execution | Reconstruct every original mutation using the Reseam APIs supported by the pinned version | The original patch implementation, not just its name or documentation |
+| Entry/exit/instruction insertions | Preserve execution position, return behavior, control flow and side effects using the appropriate method or instruction-point APIs | Original instruction/branch behavior and the target method's actual bytecode |
+| Method replacement | Preserve the complete method contract, parameters, types, exceptions, branches, side effects and return values | Full original replacement logic and target signature |
+| Helper classes and utility code | Port each required dependency to patch-time code, shared code or app-runtime extension code according to where it executes | Class references, dependency metadata, build outputs and call graph |
+| Extension code injected into the patched app | Rebuild the actual runtime code and required bindings/exports; connect calls from patch code | Original extension sources or compiled artifacts, manifest declarations and runtime call sites |
+| Patch options and user preferences | Recreate option names, types, defaults, conditions and observable effects | Original option declaration, all reads of the option and its effect on each code path |
+| Dependencies and patch ordering | Preserve prerequisite relationships and initialization assumptions | Original dependency declarations and the code that each dependency establishes |
+| Manifest, resources, assets and packaged files | Recreate each actual mutation and any code that references the changed resources/files | Original transformation plus names/IDs/layouts from the exact target app |
+| Reflection, dynamic lookup or framework hooks | Identify the actual runtime resolution path and recreate its behavior with supported Reseam mechanisms | Call sites, lookup strings/types, initialization order and actual target code |
+| Obfuscated names and version-specific behavior | Match semantically using evidence, and record version-specific variants rather than assuming names or offsets stay stable | APK/Dex inspection for each target version claimed to be supported |
+| Patch bundle, metadata and signing | Build and inspect the actual bundle with the repository's pinned Reseam toolchain | Actual generated bundle, CLI validation output and trusted key configuration |
 
-## Safe conversion procedure
+## Required source-to-port mapping
 
-1. Record the original patch's target, trigger, edits, conditions, dependencies, and side effects.
-2. Find the same method/field/resource in the exact target app version. Use semantic features rather than names alone where obfuscation applies.
-3. Translate each edit separately. Explain any dropped or changed behavior instead of silently approximating it.
-4. Validate the intended target set: require a unique match when the original patch targets one item, and support the full verified set when it intentionally targets multiple items. Report missing or ambiguous matches clearly; do not arbitrarily limit a port to one target.
-5. Build and validate. If the current DSL differs from any example here, the installed project's Reseam reference/template wins.
+Build a ledger for every original patch declaration and dependency. Each behavior row must identify:
 
-## Minimal Reseam shape
+- Original source file/class/method or compiled-class method descriptor.
+- The original target fingerprint/predicate and every target it is expected to match.
+- Exact mutation and where it executes.
+- Branch conditions, options/settings, parameters, return semantics and side effects.
+- Supporting helper/extension/resource/dependency code.
+- The concrete Reseam file/declaration that implements it.
+- Validation evidence and residual uncertainty.
 
-```kotlin
-package app.rjx.example
+Each original behavior must be accounted for as **ported**, **proven unnecessary in the target architecture**, or **unresolved with a specific reason**. Unresolved behavior prevents declaring the port complete. Do not label behavior as unnecessary just because the implementation is difficult.
 
-import app.reseam.patch.patch
+## No-template rule
 
-val exampleManifestChange = patch("Example manifest change") {
-    description("Demonstrates the declaration structure; change only an attribute that is valid for the target app.")
+Do not put an illustrative Kotlin patch, toy manifest edit, dummy target, fictional fingerprint, placeholder extension, or generic smoke-test patch into the output. Use the current official Reseam documentation to determine API syntax; use original Morphe source/artifacts to determine what code to write. If the original is unavailable, inspect all supplied evidence and request the exact missing source/artifact instead of manufacturing replacement behavior.
 
-    execute {
-        manifest.edit {
-            val application = findByTag("application").firstOrNull()
-                ?: error("manifest has no <application> element")
-            application["android:debuggable"] = "true"
-        }
-    }
-}
-```
+## Authoritative API documentation
 
-This example illustrates declaration structure and a manifest edit only. `android:debuggable` is for local testing, not a substitute for the functional behavior of an arbitrary Morphe patch.
+Use the current Reseam docs for the project’s pinned version:
+
+- [Patch declarations and metadata](https://reseam.app/docs/authoring/patches/)
+- [Finding target code](https://reseam.app/docs/authoring/finding_code/)
+- [Instruction points](https://reseam.app/docs/authoring/points/)
+- [Changing code and bytecode](https://reseam.app/docs/authoring/changing_code/)
+- [Manifest, resources and files](https://reseam.app/docs/authoring/app_files/)
+- [Low-level bytecode](https://reseam.app/docs/authoring/bytecode/)
+- [Bundle structure and build process](https://reseam.app/docs/authoring/bundles/)
+- [CLI target validation](https://reseam.app/docs/cli/patch/)
+
+If a remembered signature conflicts with the pinned toolchain’s source/docs, the pinned toolchain wins. Do not write a plausible but unverified substitute.
