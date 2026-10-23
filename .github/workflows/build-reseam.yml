@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RESEAM_BIN: ${{ runner.temp }}/engine/reseam
+      RESEAM_BIN: ${{ github.workspace }}/engine/reseam
     steps:
       - name: Check out RJX patch sources
         uses: actions/checkout@v6
@@ -47,7 +47,7 @@ jobs:
       - name: Install matching Reseam CLI
         working-directory: ${{ runner.temp }}/reseam-template
         run: |
-          mkdir -p "$RUNNER_TEMP/engine"
+          mkdir -p "$GITHUB_WORKSPACE/engine"
           version=$(sed -n 's/.*id("app.reseam.workspace") version "\([^"]*\)".*/\1/p' settings.gradle.kts)
           test -n "$version"
           curl -fsSL -o "$RESEAM_BIN" "https://cdn.reseam.app/engine/v${version}/reseam-linux-x64"
