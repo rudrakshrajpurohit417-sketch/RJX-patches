@@ -48,6 +48,8 @@ jobs:
           curl -fsSL -o "$RUNNER_TEMP/reseam-cli/reseam" "https://cdn.reseam.app/engine/v0.28.0/reseam-linux-x64"
           chmod +x "$RUNNER_TEMP/reseam-cli/reseam"
           echo "$RUNNER_TEMP/reseam-cli" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/reseam-cli/reseam" bundle keygen --out "$RUNNER_TEMP/bundle-signing.key"
+          echo "RESEAM_BUNDLE_KEY=$RUNNER_TEMP/bundle-signing.key" >> "$GITHUB_ENV"
 
       - name: Build bundle
         working-directory: ${{ runner.temp }}/reseam-template
