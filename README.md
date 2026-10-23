@@ -2,39 +2,37 @@
 
 An Agent Skill for turning Morphe/ReVanced-style Android patch implementations into maintainable Reseam Kotlin patches.
 
-## Agent Skill
+## Use the skill
 
 Skill path: `.agents/skills/morphe-to-reseam-porting/SKILL.md`
 
-It guides an AI coding agent through repository inspection, behavior reconstruction, `.class`/`.jar` and APK/DEX analysis, Reseam target design, Kotlin implementation, bundle building, dry-run validation, and honest reporting of test results.
+In Google Antigravity, open this repository as the workspace and invoke:
 
-Supporting guides:
+```text
+/morphe-to-reseam-porting
+```
+
+You can also let a compatible coding agent discover the skill automatically. Provide the original Morphe patch source or compiled artifact (`.class`/`.jar`), plus the target APK/app version when available. The skill guides the agent to inspect the implementation, recover its behavior and dependencies, recreate the target selection in Reseam, write the Kotlin patch, build the bundle, and report what was actually tested.
+
+## Reference guides
 
 - [Framework migration map](.agents/skills/morphe-to-reseam-porting/references/migration-map.md)
-- [Class, JAR, APK, and bytecode inspection](.agents/skills/morphe-to-reseam-porting/references/class-and-bytecode-inputs.md)
+- [Class, JAR, APK, DEX, and bytecode inspection](.agents/skills/morphe-to-reseam-porting/references/class-and-bytecode-inputs.md)
 - [Validation checklist](.agents/skills/morphe-to-reseam-porting/references/validation.md)
 - [Upstream docs and source links](.agents/skills/morphe-to-reseam-porting/references/upstream-docs.md)
 
-The skill uses the open Agent Skills folder format and lives in `.agents/skills/` for discovery by compatible coding agents. In Google Antigravity, open this repository as the workspace and invoke `/morphe-to-reseam-porting`, or let the agent select it automatically. Then ask it to port a specific Morphe patch to Reseam; provide the patch source or artifact and target app version when available.
+## Validation
 
-## Existing Reseam smoke-test patch
+The GitHub Actions workflow at [Validate Agent Skills](.github/workflows/validate-agent-skills.yml) checks skill metadata and local references.
 
-`apps/adguard/patch/` still contains an **Enable debugging** example only. It marks the target application's manifest as debuggable for local testing; it is not an AdGuard Premium patch and does not alter subscription/license checks.
+## Scope
 
-## Build the sample bundle
+This repository is focused on the Morphe-to-Reseam porting skill. No AdGuard debugging patch or AdGuard-specific bundle workflow is included.
 
-The `Build Reseam bundle` GitHub Actions workflow builds the smoke-test patch against the official Reseam template and uploads a `.reseam` bundle as a workflow artifact.
+The skill supports legitimate feature ports and compatibility fixes; it does not implement paid-license/subscription bypasses, payment evasion, DRM defeat, credential theft, or signature/trust bypasses.
 
-1. Open [GitHub Actions](https://github.com/rudrakshrajpurohit417-sketch/RJX-patches/actions).
-2. Open the latest **Build Reseam bundle** run.
-3. Download `rjx-patches-reseam-bundle` from its Artifacts section.
+## Upstream projects
 
-A successful build verifies compilation and bundle validation only. Runtime behavior must be tested separately against the exact target APK version.
-
-## References
-
-- [Reseam authoring docs](https://reseam.app/docs/)
+- [Reseam authoring documentation](https://reseam.app/docs/)
 - [Reseam patch bundle template](https://git.reseam.app/reseam/patches-template)
-- [Official Morphe patch repository](https://github.com/MorpheApp/morphe-patches)
-
-**Safety boundary:** this skill is for legitimate feature changes and compatibility ports. It will not implement patches that bypass paid licenses/subscriptions, payment controls, DRM, credentials, or bundle/signature trust checks.
+- [Morphe patch repository](https://github.com/MorpheApp/morphe-patches)
