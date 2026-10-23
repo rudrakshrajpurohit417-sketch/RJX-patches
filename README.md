@@ -15,7 +15,7 @@ Supporting guides:
 - [Validation checklist](.agents/skills/morphe-to-reseam-porting/references/validation.md)
 - [Upstream docs and source links](.agents/skills/morphe-to-reseam-porting/references/upstream-docs.md)
 
-The skill uses the open Agent Skills folder format and lives in `.agents/skills/` for discovery by compatible coding agents. Open your AI coding tool in this repository and ask it to port a specific Morphe patch to Reseam; provide the patch source or artifact and the target app version when available.
+The skill uses the open Agent Skills folder format and lives in `.agents/skills/` for discovery by compatible coding agents. In Google Antigravity, open this repository as the workspace and invoke `/morphe-to-reseam-porting`, or let the agent select it automatically. Then ask it to port a specific Morphe patch to Reseam; provide the patch source or artifact and target app version when available.
 
 ## Existing Reseam smoke-test patch
 
