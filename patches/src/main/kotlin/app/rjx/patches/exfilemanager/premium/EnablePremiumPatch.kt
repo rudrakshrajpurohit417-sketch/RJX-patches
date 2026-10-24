@@ -1,7 +1,17 @@
 package app.rjx.patches.exfilemanager.premium
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.patch.AppTarget
+import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.bytecodePatch
+
+private val EX_FILE_MANAGER = Compatibility(
+    name = "EX File Manager",
+    packageName = "com.ace.ex.file.manager",
+    targets = listOf(
+        AppTarget(version = "1.6.2")
+    )
+)
 
 /**
  * Unlocks EX File Manager premium (tested on 1.6.2 / versionCode 51).
@@ -15,7 +25,7 @@ val enablePremiumPatch = bytecodePatch(
     name = "Enable Premium",
     description = "Unlocks all premium features in EX File Manager (lifetime entitlement)."
 ) {
-    compatibleWith("com.ace.ex.file.manager")
+    compatibleWith(EX_FILE_MANAGER)
 
     execute {
         // 1. Force entitlement check (a37.i()Z)
