@@ -2,14 +2,13 @@ package app.rjx.patches.exfilemanager.premium
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.util.returnEarly
 
 /**
  * Unlocks EX File Manager premium (tested on 1.6.2 / versionCode 51).
  *
- * 1) a37.i() always true (entitlement gate)
- * 2) t02.h() returns forced ACTIVE + LIFETIME hg6 state
- * 3) PremiumVerificationWorker.d() returns success (qm4) so background verify cannot revoke
+ * 1) a37.i() always true
+ * 2) t02.h() forced ACTIVE + LIFETIME hg6
+ * 3) PremiumVerificationWorker.d() returns success (qm4)
  */
 @Suppress("unused")
 val enablePremiumPatch = bytecodePatch(
@@ -19,10 +18,16 @@ val enablePremiumPatch = bytecodePatch(
     compatibleWith("com.ace.ex.file.manager")
 
     execute {
-        // 1. Force entitlement check
-        IsPremiumEntitlementFingerprint.method.returnEarly(true)
+        // 1. Force entitlement check (a37.i()Z)
+        IsPremiumEntitlementFingerprint.method.addInstructions(
+            0,
+            """
+            const/4 v0, 0x1
+            return v0
+            """.trimIndent()
+        )
 
-        // 2. Force lifetime PremiumState
+        // 2. Force lifetime PremiumState (t02.h())
         PremiumStateBuilderFingerprint.method.addInstructions(
             0,
             """
