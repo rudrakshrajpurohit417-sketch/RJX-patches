@@ -1,0 +1,9 @@
+org.gradle.parallel = true
+org.gradle.caching = true
+kotlin.code.style = official
+version = 1.0.0
+
+# Required to resolve the Morphe patches plugin from GitHub Packages.
+# Create a classic PAT with read:packages and put it here (do not commit real values).
+# gpr.user = your-github-username
+# gpr.key = ghp_xxxxxxxx
