@@ -49,7 +49,7 @@ jobs:
         working-directory: ${{ runner.temp }}/reseam-template
         run: |
           version=$(sed -n 's/.*id("app.reseam.workspace") version "\(.*\)".*/\1/p' settings.gradle.kts)
-          mkdir -p "$RUNNER_TEMP/engine"
+          mkdir -p "$GITHUB_WORKSPACE/.tmp/engine"
           curl -fsSL -o "$RESEAM_BIN" "https://cdn.reseam.app/engine/v${version}/reseam-linux-x64"
           chmod +x "$RESEAM_BIN"
           "$RESEAM_BIN" bundle keygen --out "$RESEAM_BUNDLE_KEY"
