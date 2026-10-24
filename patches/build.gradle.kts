@@ -3,7 +3,7 @@ group = "app.rjx"
 patches {
     about {
         name = "RJX Patches"
-        description = "Custom Morphe patches by RJ — EX File Manager premium unlock and more"
+        description = "Custom Morphe patches by RJ"
         source = "https://github.com/rudrakshrajpurohit417-sketch/RJX-patches"
         author = "RJ"
         contact = "na"

@@ -4,4 +4,4 @@
 
 ### Features
 
-* **EX File Manager:** Add Enable Premium patch
+* **EX File Manager:** Enable Premium (entitlement + lifetime state + kill verification worker)
