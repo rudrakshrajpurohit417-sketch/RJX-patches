@@ -15,8 +15,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RESEAM_BIN: ${{ runner.temp }}/engine/reseam
-      RESEAM_BUNDLE_KEY: ${{ runner.temp }}/bundle-signing.key
+      RESEAM_BIN: ${{ github.workspace }}/.tmp/engine/reseam
+      RESEAM_BUNDLE_KEY: ${{ github.workspace }}/.tmp/bundle-signing.key
     steps:
       - name: Check out RJX-patches
         uses: actions/checkout@v4
